@@ -1,0 +1,28 @@
+body {
+  background: linear-gradient(180deg,#eef2ff, #ffffff);
+}
+
+.card-task {
+  word-wrap: break-word;
+}
+
+.task-title {
+  font-weight: 600;
+}
+
+.overflow-fix {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.badge-low {
+  background: #60a5fa;
+}
+
+.badge-med {
+  background: #f59e0b;
+}
+
+.badge-high {
+  background: #ef4444;
+}

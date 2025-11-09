@@ -171,12 +171,11 @@ const App = {
     if (showAlert) alert("Dados carregados!");
   },
 
-  clearStorage() {
-    localStorage.removeItem(STORAGE_KEY);
-    this.state = { tasks: {}, order: [] };
-    this.updateLists();
-    alert("Storage limpo!");
-  }
-};
+clearStorage() {
+  this.state = { tasks: {}, order: [] };
+  this.updateLists();
+  alert("Tela limpa! Para restaurar clique em Recuperar dados.");
+}
+
 
 App.init();

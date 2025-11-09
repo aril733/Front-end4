@@ -48,6 +48,7 @@ const App = {
 
   handleSubmit() {
     const id = this.$taskId.value || this.generateId();
+
     const task = {
       id,
       title: this.$title.value.trim(),
@@ -116,7 +117,7 @@ const App = {
           ${task.done
             ? `<button class="btn btn-danger btn-sm" data-id="${task.id}" data-act="delete">Excluir</button>`
             : `
-              <button class="btn btn-primary btn-sm" data-id="${task.id}" data-act="done">Marcar feita</button>
+              <button class="btn btn-success btn-sm" data-id="${task.id}" data-act="done">Marcar feita</button>
               <button class="btn btn-warning btn-sm" data-id="${task.id}" data-act="edit">Editar</button>
             `
           }
@@ -166,11 +167,14 @@ const App = {
 
     this.state = JSON.parse(raw);
     this.updateLists();
+
     if (showAlert) alert("Dados carregados!");
   },
 
   clearStorage() {
     localStorage.removeItem(STORAGE_KEY);
+    this.state = { tasks: {}, order: [] };
+    this.updateLists();
     alert("Storage limpo!");
   }
 };

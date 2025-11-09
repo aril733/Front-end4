@@ -6,7 +6,7 @@ const App = {
   init() {
     this.cache();
     this.bind();
-    this.loadFromStorage();
+    this.loadFromStorage(false); 
     this.updateLists();
   },
 
@@ -43,7 +43,7 @@ const App = {
 
     this.$saveAll.addEventListener("click", () => this.saveStorage());
     this.$loadAll.addEventListener("click", () => this.loadFromStorage(true));
-    this.$clearAll.addEventListener("click", () => this.clearStorage());
+    this.$clearAll.addEventListener("click", () => this.clearVisual());
   },
 
   handleSubmit() {
@@ -62,7 +62,10 @@ const App = {
     };
 
     this.state.tasks[id] = task;
-    if (!this.state.order.includes(id)) this.state.order.unshift(id);
+
+    if (!this.state.order.includes(id)) {
+      this.state.order.unshift(id);
+    }
 
     this.updateLists();
     this.resetForm();
@@ -87,7 +90,9 @@ const App = {
     this.state.order.forEach(id => {
       const t = this.state.tasks[id];
       if (!t) return;
-      (t.done ? done : pending).push(t);
+
+      if (t.done) done.push(t);
+      else pending.push(t);
     });
 
     this.$pendingCount.textContent = pending.length;
@@ -108,7 +113,7 @@ const App = {
             <div class="task-title">${task.title}</div>
             <small class="text-muted">${task.responsible} • ${task.startDate} → ${task.endDate}</small>
           </div>
-          <span class="badge badge-${task.priority}">${task.priority.toUpperCase()}</span>
+          <span class="badge bg-secondary">${task.priority.toUpperCase()}</span>
         </div>
 
         <p class="small text-muted mt-2">${task.note || "Sem observações"}</p>
@@ -163,19 +168,23 @@ const App = {
 
   loadFromStorage(showAlert = false) {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
+
+    if (!raw) {
+      if (showAlert) alert("Nenhum dado salvo!");
+      return;
+    }
 
     this.state = JSON.parse(raw);
     this.updateLists();
 
-    if (showAlert) alert("Dados carregados!");
+    if (showAlert) alert("Dados recuperados!");
   },
 
-clearStorage() {
-  this.state = { tasks: {}, order: [] };
-  this.updateLists();
-  alert("Tela limpa! Para restaurar clique em Recuperar dados.");
-}
-
+  clearVisual() {
+    this.state = { tasks: {}, order: [] };
+    this.updateLists();
+    alert("Tela limpa! Clique em Recuperar Dados para voltar ao último save.");
+  }
+};
 
 App.init();

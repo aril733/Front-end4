@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ToDo — Lista Variant</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="container py-4">
+  <h1 class="h3">Gerenciador de Tarefas — Lista Variant</h1>
+
+  <div class="mt-3 d-flex gap-2">
+    <button id="saveAllBtn" class="btn btn-success">Gravar dados</button>
+    <button id="loadAllBtn" class="btn btn-primary">Recuperar dados</button>
+    <button id="clearAllBtn" class="btn btn-danger">Limpar dados</button>
+  </div>
+</header>
+
+<main class="container mt-4">
+
+  <div class="row g-4">
+
+    <div class="col-12">
+      <form id="taskForm" class="card p-3">
+        <h5 class="mb-3">Nova tarefa</h5>
+
+        <input type="hidden" id="taskId">
+
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <label class="form-label">Título</label>
+            <input id="title" class="form-control" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Responsável</label>
+            <input id="responsible" class="form-control">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Data início</label>
+            <input id="startDate" type="date" class="form-control">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Data final</label>
+            <input id="endDate" type="date" class="form-control">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Prioridade</label>
+            <select id="priority" class="form-select">
+              <option value="low">Baixa</option>
+              <option value="med">Média</option>
+              <option value="high">Alta</option>
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Observação</label>
+            <textarea id="note" class="form-control" rows="3"></textarea>
+          </div>
+
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <button id="resetFormBtn" type="button" class="btn btn-outline-secondary">Limpar</button>
+          <button type="submit" class="btn btn-primary">Salvar tarefa</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="col-md-6">
+      <h5>Tarefas pendentes (<span id="pendingCount">0</span>)</h5>
+      <div id="pendingList" class="overflow-fix"></div>
+    </div>
+
+    <div class="col-md-6">
+      <h5>Tarefas concluídas (<span id="doneCount">0</span>)</h5>
+      <div id="doneList" class="overflow-fix"></div>
+    </div>
+
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

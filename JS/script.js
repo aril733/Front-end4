@@ -183,7 +183,7 @@ const App = {
   clearVisual() {
     this.state = { tasks: {}, order: [] };
     this.updateLists();
-    alert("Tela limpa! Clique em Recuperar Dados para voltar ao último save.");
+    alert("Tela limpa!");
   }
 };
 

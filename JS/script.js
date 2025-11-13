@@ -43,7 +43,7 @@ const App = {
 
     this.$saveAll.addEventListener("click", () => this.saveStorage());
     this.$loadAll.addEventListener("click", () => this.loadFromStorage(true));
-    this.$clearAll.addEventListener("click", () => this.clearVisual());
+    this.$clearAll.addEventListener("click", () => this.clearStorage());
   },
 
   handleSubmit() {
@@ -180,10 +180,15 @@ const App = {
     if (showAlert) alert("Dados recuperados!");
   },
 
-  clearVisual() {
+  clearStorage() {
+    if (!confirm("Tem certeza que deseja apagar TODOS os dados do armazenamento?")) {
+      return;
+    }
+
+    localStorage.removeItem(STORAGE_KEY);
     this.state = { tasks: {}, order: [] };
     this.updateLists();
-    alert("Tela limpa!");
+    alert("Todos os dados foram apagados!");
   }
 };
 

@@ -1,28 +1,113 @@
-body {
-  background: linear-gradient(180deg,#eef2ff, #ffffff);
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
+/* Fundo bonito moderno */
+body {
+  background: linear-gradient(135deg, #3b1e63, #6b21a8, #db2777);
+  background-attachment: fixed;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #fff;
+}
+
+/* Card geral */
+.card {
+  background-color: rgba(0, 0, 0, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+/* Inputs */
+input, textarea, select {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #000 !important;
+  border-radius: 6px !important;
+}
+
+/* Texto dentro dos cards de tarefas */
 .card-task {
   word-wrap: break-word;
+  background-color: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 12px;
 }
 
+/* Títulos */
 .task-title {
   font-weight: 600;
 }
 
+/* Scroll bonito */
 .overflow-fix {
   max-height: 400px;
   overflow-y: auto;
+  padding-right: 5px;
 }
 
+/* Prioridades */
 .badge-low {
-  background: #60a5fa;
+  background: #60a5fa !important;
 }
 
 .badge-med {
-  background: #f59e0b;
+  background: #f59e0b !important;
 }
 
 .badge-high {
-  background: #ef4444;
+  background: #ef4444 !important;
+}
+
+/* BOTÕES DE CIMA (Gravar, Recuperar, Limpar) */
+header .btn {
+  background-color: rgba(0,0,0,0.55);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+  transition: 0.2s;
+  border-radius: 8px;
+  padding: 8px 14px;
+}
+
+header .btn:hover {
+  background-color: rgba(0,0,0,0.85);
+}
+
+/* Botão principal (Salvar tarefa) */
+.btn-primary {
+  background-color: #6366f1 !important;
+  border: none !important;
+  font-weight: bold;
+}
+
+.btn-primary:hover {
+  background-color: #4f46e5 !important;
+}
+
+/* Botão limpar formulário */
+.btn-outline-secondary {
+  border-color: #cbd5e1 !important;
+  color: #e2e8f0 !important;
+}
+
+.btn-outline-secondary:hover {
+  background-color: rgba(255,255,255,0.1) !important;
+}
+
+/* Scroll estilizado */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }

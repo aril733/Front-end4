@@ -1,129 +1,129 @@
-const STORAGE_KEY = "todoVariant:v1";
+const CHAVE_ARMAZENAMENTO = "tarefasSalvas:v1";
 
 const App = {
-  state: { tasks: {}, order: [] },
+  estado: { tarefas: {}, ordem: [] },
 
   init() {
-    this.cache();
-    this.bind();
-    this.loadFromStorage(false); 
-    this.updateLists();
+    this.cachearElementos();
+    this.vincularEventos();
+    this.carregarDoStorage(false);
+    this.atualizarListas();
   },
 
-  cache() {
-    this.$form = document.getElementById("taskForm");
-    this.$title = document.getElementById("title");
-    this.$responsible = document.getElementById("responsible");
-    this.$startDate = document.getElementById("startDate");
-    this.$endDate = document.getElementById("endDate");
-    this.$priority = document.getElementById("priority");
-    this.$note = document.getElementById("note");
-    this.$taskId = document.getElementById("taskId");
+  cachearElementos() {
+    this.$formulario = document.getElementById("formTarefa");
+    this.$titulo = document.getElementById("titulo");
+    this.$responsavel = document.getElementById("responsavel");
+    this.$dataInicio = document.getElementById("dataInicio");
+    this.$dataFim = document.getElementById("dataFim");
+    this.$prioridade = document.getElementById("prioridade");
+    this.$anotacao = document.getElementById("anotacao");
+    this.$idTarefa = document.getElementById("idTarefa");
 
-    this.$pendingList = document.getElementById("pendingList");
-    this.$doneList = document.getElementById("doneList");
+    this.$listaPendentes = document.getElementById("listaPendentes");
+    this.$listaConcluidas = document.getElementById("listaConcluidas");
 
-    this.$pendingCount = document.getElementById("pendingCount");
-    this.$doneCount = document.getElementById("doneCount");
+    this.$qtdPendentes = document.getElementById("qtdPendentes");
+    this.$qtdConcluidas = document.getElementById("qtdConcluidas");
 
-    this.$saveAll = document.getElementById("saveAllBtn");
-    this.$loadAll = document.getElementById("loadAllBtn");
-    this.$clearAll = document.getElementById("clearAllBtn");
+    this.$btnSalvar = document.getElementById("btnSalvar");
+    this.$btnRecuperar = document.getElementById("btnRecuperar");
+    this.$btnLimpar = document.getElementById("btnLimpar");
 
-    this.$reset = document.getElementById("resetFormBtn");
+    this.$btnZerarForm = document.getElementById("btnZerarForm");
   },
 
-  bind() {
-    this.$form.addEventListener("submit", e => {
+  vincularEventos() {
+    this.$formulario.addEventListener("submit", e => {
       e.preventDefault();
-      this.handleSubmit();
+      this.salvarOuEditarTarefa();
     });
 
-    this.$reset.addEventListener("click", () => this.resetForm());
+    this.$btnZerarForm.addEventListener("click", () => this.limparFormulario());
 
-    this.$saveAll.addEventListener("click", () => this.saveStorage());
-    this.$loadAll.addEventListener("click", () => this.loadFromStorage(true));
-    this.$clearAll.addEventListener("click", () => this.clearStorage());
+    this.$btnSalvar.addEventListener("click", () => this.salvarNoStorage());
+    this.$btnRecuperar.addEventListener("click", () => this.carregarDoStorage(true));
+    this.$btnLimpar.addEventListener("click", () => this.limparStorage());
   },
 
-  handleSubmit() {
-    const id = this.$taskId.value || this.generateId();
+  salvarOuEditarTarefa() {
+    const id = this.$idTarefa.value || this.gerarId();
 
-    const task = {
+    const tarefa = {
       id,
-      title: this.$title.value.trim(),
-      responsible: this.$responsible.value,
-      startDate: this.$startDate.value,
-      endDate: this.$endDate.value,
-      priority: this.$priority.value,
-      note: this.$note.value,
-      done: false,
-      createdAt: new Date().toISOString()
+      titulo: this.$titulo.value.trim(),
+      responsavel: this.$responsavel.value,
+      dataInicio: this.$dataInicio.value,
+      dataFim: this.$dataFim.value,
+      prioridade: this.$prioridade.value,
+      anotacao: this.$anotacao.value,
+      concluida: false,
+      criadaEm: new Date().toISOString()
     };
 
-    this.state.tasks[id] = task;
+    this.estado.tarefas[id] = tarefa;
 
-    if (!this.state.order.includes(id)) {
-      this.state.order.unshift(id);
+    if (!this.estado.ordem.includes(id)) {
+      this.estado.ordem.unshift(id);
     }
 
-    this.updateLists();
-    this.resetForm();
+    this.atualizarListas();
+    this.limparFormulario();
   },
 
-  generateId() {
-    return "t_" + Math.random().toString(36).slice(2, 9);
+  gerarId() {
+    return "id_" + Math.random().toString(36).slice(2, 9);
   },
 
-  resetForm() {
-    this.$form.reset();
-    this.$taskId.value = "";
+  limparFormulario() {
+    this.$formulario.reset();
+    this.$idTarefa.value = "";
   },
 
-  updateLists() {
-    this.$pendingList.innerHTML = "";
-    this.$doneList.innerHTML = "";
+  atualizarListas() {
+    this.$listaPendentes.innerHTML = "";
+    this.$listaConcluidas.innerHTML = "";
 
-    const pending = [];
-    const done = [];
+    const pendentes = [];
+    const concluidas = [];
 
-    this.state.order.forEach(id => {
-      const t = this.state.tasks[id];
+    this.estado.ordem.forEach(id => {
+      const t = this.estado.tarefas[id];
       if (!t) return;
 
-      if (t.done) done.push(t);
-      else pending.push(t);
+      if (t.concluida) concluidas.push(t);
+      else pendentes.push(t);
     });
 
-    this.$pendingCount.textContent = pending.length;
-    this.$doneCount.textContent = done.length;
+    this.$qtdPendentes.textContent = pendentes.length;
+    this.$qtdConcluidas.textContent = concluidas.length;
 
-    pending.forEach(t => this.$pendingList.appendChild(this.card(t)));
-    done.forEach(t => this.$doneList.appendChild(this.card(t)));
+    pendentes.forEach(t => this.$listaPendentes.appendChild(this.criarCard(t)));
+    concluidas.forEach(t => this.$listaConcluidas.appendChild(this.criarCard(t)));
   },
 
-  card(task) {
+  criarCard(tarefa) {
     const div = document.createElement("div");
-    div.className = "card mb-2 card-task";
+    div.className = "card mb-2 card-tarefa";
 
     div.innerHTML = `
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <div>
-            <div class="task-title">${task.title}</div>
-            <small class="text-muted">${task.responsible} • ${task.startDate} → ${task.endDate}</small>
+            <div class="titulo-tarefa">${tarefa.titulo}</div>
+            <small class="text-muted">${tarefa.responsavel} • ${tarefa.dataInicio} → ${tarefa.dataFim}</small>
           </div>
-          <span class="badge bg-secondary">${task.priority.toUpperCase()}</span>
+          <span class="badge bg-secondary">${tarefa.prioridade.toUpperCase()}</span>
         </div>
 
-        <p class="small text-muted mt-2">${task.note || "Sem observações"}</p>
+        <p class="small text-muted mt-2">${tarefa.anotacao || "Sem observações"}</p>
 
         <div class="d-flex gap-2 mt-2">
-          ${task.done
-            ? `<button class="btn btn-danger btn-sm" data-id="${task.id}" data-act="delete">Excluir</button>`
+          ${tarefa.concluida
+            ? `<button class="btn btn-danger btn-sm" data-id="${tarefa.id}" data-acao="excluir">Excluir</button>`
             : `
-              <button class="btn btn-success btn-sm" data-id="${task.id}" data-act="done">Marcar feita</button>
-              <button class="btn btn-warning btn-sm" data-id="${task.id}" data-act="edit">Editar</button>
+              <button class="btn btn-success btn-sm" data-id="${tarefa.id}" data-acao="concluir">Concluir</button>
+              <button class="btn btn-warning btn-sm" data-id="${tarefa.id}" data-acao="editar">Editar</button>
             `
           }
         </div>
@@ -131,63 +131,62 @@ const App = {
     `;
 
     div.querySelectorAll("button").forEach(btn =>
-      btn.addEventListener("click", () => this.handleAction(btn.dataset))
+      btn.addEventListener("click", () => this.executarAcao(btn.dataset))
     );
 
     return div;
   },
 
-  handleAction({ id, act }) {
-    if (act === "done") {
-      this.state.tasks[id].done = true;
+  executarAcao({ id, acao }) {
+    if (acao === "concluir") {
+      this.estado.tarefas[id].concluida = true;
     }
 
-    if (act === "delete") {
-      delete this.state.tasks[id];
-      this.state.order = this.state.order.filter(x => x !== id);
+    if (acao === "excluir") {
+      delete this.estado.tarefas[id];
+      this.estado.ordem = this.estado.ordem.filter(x => x !== id);
     }
 
-    if (act === "edit") {
-      const t = this.state.tasks[id];
-      this.$taskId.value = t.id;
-      this.$title.value = t.title;
-      this.$responsible.value = t.responsible;
-      this.$startDate.value = t.startDate;
-      this.$endDate.value = t.endDate;
-      this.$priority.value = t.priority;
-      this.$note.value = t.note;
+    if (acao === "editar") {
+      const t = this.estado.tarefas[id];
+      this.$idTarefa.value = t.id;
+      this.$titulo.value = t.titulo;
+      this.$responsavel.value = t.responsavel;
+      this.$dataInicio.value = t.dataInicio;
+      this.$dataFim.value = t.dataFim;
+      this.$prioridade.value = t.prioridade;
+      this.$anotacao.value = t.anotacao;
     }
 
-    this.updateLists();
+    this.atualizarListas();
   },
 
-  saveStorage() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
-    alert("Dados gravados!");
+  salvarNoStorage() {
+    localStorage.setItem(CHAVE_ARMAZENAMENTO, JSON.stringify(this.estado));
+    alert("Tarefas salvas!");
   },
 
-  loadFromStorage(showAlert = false) {
-    const raw = localStorage.getItem(STORAGE_KEY);
+  carregarDoStorage(alertar = false) {
+    const dados = localStorage.getItem(CHAVE_ARMAZENAMENTO);
 
-    if (!raw) {
-      if (showAlert) alert("Nenhum dado salvo!");
+    if (!dados) {
+      if (alertar) alert("Nenhum dado salvo!");
       return;
     }
 
-    this.state = JSON.parse(raw);
-    this.updateLists();
+    this.estado = JSON.parse(dados);
+    this.atualizarListas();
 
-    if (showAlert) alert("Dados recuperados!");
+    if (alertar) alert("Tarefas recuperadas!");
   },
 
-  clearStorage() {
-    if (!confirm("Tem certeza que deseja apagar TODOS os dados do armazenamento?")) {
-      return;
-    }
+  limparStorage() {
+    if (!confirm("Deseja apagar TODOS os dados salvos?")) return;
 
-    localStorage.removeItem(STORAGE_KEY);
-    this.state = { tasks: {}, order: [] };
-    this.updateLists();
+    localStorage.removeItem(CHAVE_ARMAZENAMENTO);
+    this.estado = { tarefas: {}, ordem: [] };
+    this.atualizarListas();
+
     alert("Todos os dados foram apagados!");
   }
 };

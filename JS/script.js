@@ -1,23 +1,14 @@
-// Chave única no localStorage
 const CHAVE = "tarefasSalvas:v1";
 
-/*
-  Banco: objeto simples que guarda arrays de tarefas.
-  Cada tarefa é um objeto:
-  { titulo, responsavel, dataInicio, dataFim, prioridade, observacao }
-*/
 var Banco = {
   pendentes: [],
   feitas: []
 };
 
-/* ---------- Helpers para compatibilidade de ids ---------- */
-// tenta pegar pelo primeiro id; se não existe tenta o segundo (opcional)
 function pegarEl(id1, id2) {
   return document.getElementById(id1) || (id2 ? document.getElementById(id2) : null);
 }
 
-/* ---------- Elementos (procura por variações de nomes) ---------- */
 var form = pegarEl("formTarefa", "formularioTarefa");
 var campoId = pegarEl("idTarefa", "campoId");
 var campoTitulo = pegarEl("campoTitulo", "titulo");
@@ -38,7 +29,6 @@ var botaoRecuperar = pegarEl("botaoRecuperar", "loadAllBtn") || pegarEl("btnRecu
 var botaoLimpar = pegarEl("botaoLimpar", "botaoLimpar") || pegarEl("clearAllBtn", "btnLimpar");
 var botaoLimparForm = pegarEl("botaoLimparFormulario", "resetFormBtn");
 
-/* ---------- Mensagem de status (não usa alert/confirm) ---------- */
 function mostrarMensagem(texto, tempo = 2200) {
   var barra = document.getElementById("barraMensagem");
   if (!barra) {
@@ -60,14 +50,12 @@ function mostrarMensagem(texto, tempo = 2200) {
   barra._t = setTimeout(() => { barra.style.opacity = "0"; }, tempo);
 }
 
-/* ---------- Renderiza as listas no DOM ---------- */
 function renderizarListas() {
   if (!listaPendentes || !listaConcluidas) return;
 
   listaPendentes.innerHTML = "";
   listaConcluidas.innerHTML = "";
 
-  // Pendentes
   for (var i = 0; i < Banco.pendentes.length; i++) {
     var t = Banco.pendentes[i];
     var item = document.createElement("div");
@@ -87,7 +75,6 @@ function renderizarListas() {
     listaPendentes.appendChild(item);
   }
 
-  // Concluídas
   for (var j = 0; j < Banco.feitas.length; j++) {
     var f = Banco.feitas[j];
     var item2 = document.createElement("div");
@@ -106,11 +93,9 @@ function renderizarListas() {
     listaConcluidas.appendChild(item2);
   }
 
-  // atualiza contadores
   if (contadorPendentes) contadorPendentes.textContent = Banco.pendentes.length;
   if (contadorConcluidas) contadorConcluidas.textContent = Banco.feitas.length;
 
-  // adiciona handlers (simples)
   var btnsConcluir = document.querySelectorAll(".btn-concluir");
   btnsConcluir.forEach(function(b) {
     b.onclick = function() {
@@ -136,7 +121,6 @@ function renderizarListas() {
   });
 }
 
-/* ---------- Segurança: escapar html (evita injeção simples) ---------- */
 function escapeHtml(s) {
   if (!s) return "";
   return String(s)
@@ -146,7 +130,6 @@ function escapeHtml(s) {
     .replace(/"/g, "&quot;");
 }
 
-/* ---------- Operações principais ---------- */
 function adicionarTarefaDoFormulario() {
   if (!campoTitulo || !campoDataInicio || !campoDataFim) {
     mostrarMensagem("Campos do formulário não encontrados.");
@@ -159,7 +142,6 @@ function adicionarTarefaDoFormulario() {
   var prioridade = (campoPrioridade ? campoPrioridade.value : "baixa");
   var observacao = (campoObservacao ? campoObservacao.value.trim() : "");
 
-  // validação simples (sem alert)
   if (!titulo || !inicio || !fim) {
     mostrarMensagem("Preencha título, data início e data final.");
     return;
@@ -182,15 +164,15 @@ function marcarConcluida(indice) {
   var t = Banco.pendentes[indice];
   if (!t) return;
   Banco.pendentes.splice(indice, 1);
-  Banco.feitas.unshift(t); // guardar no topo
+  Banco.feitas.unshift(t); 
   renderizarListas();
 }
 
 function editarPendente(indice) {
   var t = Banco.pendentes[indice];
   if (!t) return;
-  // preenche o formulário para editar (remover a antiga)
-  if (campoId) campoId.value = "editar"; // flag simples (não usamos id interno)
+ 
+  if (campoId) campoId.value = "editar"; 
   campoTitulo.value = t.titulo;
   if (campoResponsavel) campoResponsavel.value = t.responsavel;
   campoDataInicio.value = t.dataInicio;
@@ -198,20 +180,16 @@ function editarPendente(indice) {
   if (campoPrioridade) campoPrioridade.value = t.prioridade;
   if (campoObservacao) campoObservacao.value = t.observacao;
 
-  // remove a original (ao salvar será um novo item)
   Banco.pendentes.splice(indice, 1);
   renderizarListas();
 }
 
 function excluirConcluida(indice) {
-  // exclusão permanente da tarefa concluída
   Banco.feitas.splice(indice, 1);
   renderizarListas();
 }
 
-/* ---------- LocalStorage: gravar/ler/limpar ---------- */
 function salvarNoLocal() {
-  // guardamos um objeto com dois arrays (pendentes e feitas)
   var obj = {
     pendentes: Banco.pendentes,
     feitas: Banco.feitas
@@ -230,11 +208,8 @@ function carregarDoLocal() {
   try {
     var obj = JSON.parse(raw);
 
-    // Apenas pendentes devem retornar para a interface
     Banco.pendentes = Array.isArray(obj.pendentes) ? obj.pendentes : [];
 
-    // Concluídas não voltam ao App – são só histórico,
-    // mas continuam salvas para o professor ver no localStorage.
     Banco.feitas = [];
 
     renderizarListas();
@@ -245,22 +220,17 @@ function carregarDoLocal() {
   }
 }
 
-
 function limparLocalStorage() {
   localStorage.removeItem(CHAVE);
   mostrarMensagem("LocalStorage limpo (dados removidos).");
-  // Nota: não limpamos a interface — isso segue a interpretação do requisito
-  // que pede para limpar "dados do App que esteja no localstorage"
 }
 
-/* ---------- Eventos dos botões e formulário ---------- */
 if (form) {
   form.addEventListener("submit", function(e) {
     e.preventDefault();
     adicionarTarefaDoFormulario();
   });
 } else {
-  // se não houver formulário, ainda ligamos botões individuais
 }
 
 if (botaoGravar) botaoGravar.onclick = salvarNoLocal;
@@ -272,7 +242,6 @@ if (botaoLimparForm) botaoLimparForm.onclick = function() {
   mostrarMensagem("Formulário limpo.");
 }
 
-/* ---------- Ao carregar a página: ler o storage automaticamente ---------- */
 window.addEventListener("load", function() {
   carregarDoLocal();
   renderizarListas();

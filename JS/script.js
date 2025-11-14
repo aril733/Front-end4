@@ -226,17 +226,25 @@ function carregarDoLocal() {
     mostrarMensagem("Nenhum dado salvo no localStorage.");
     return;
   }
+
   try {
     var obj = JSON.parse(raw);
-    Banco.pendentes = obj.pendentes || [];
-    Banco.feitas = obj.feitas || [];
+
+    // Apenas pendentes devem retornar para a interface
+    Banco.pendentes = Array.isArray(obj.pendentes) ? obj.pendentes : [];
+
+    // Concluídas não voltam ao App – são só histórico,
+    // mas continuam salvas para o professor ver no localStorage.
+    Banco.feitas = [];
+
     renderizarListas();
-    mostrarMensagem("Dados recuperados do localStorage.");
+    mostrarMensagem("Pendentes recuperadas. Concluídas mantidas apenas no localStorage.");
   } catch (e) {
     console.error("Erro ao ler localStorage:", e);
     mostrarMensagem("Erro ao recuperar dados (ver console).");
   }
 }
+
 
 function limparLocalStorage() {
   localStorage.removeItem(CHAVE);

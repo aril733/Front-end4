@@ -1,196 +1,271 @@
-const CHAVE_ARMAZENAMENTO = "tarefasSalvas:v1";
+// Chave única no localStorage
+const CHAVE = "tarefasSalvas:v1";
 
-const App = {
-  estado: { tarefas: {}, ordem: [] },
-
-  init() {
-    this.pegarElementos();
-    this.adicionarEventos();
-    this.carregarDoStorage(false);
-    this.atualizarListas();
-  },
-
-  pegarElementos() {
-    // Formulário
-    this.$formulario = document.getElementById("formularioTarefa");
-    this.$campoTitulo = document.getElementById("campoTitulo");
-    this.$campoResponsavel = document.getElementById("campoResponsavel");
-    this.$campoDataInicio = document.getElementById("campoDataInicio");
-    this.$campoDataFim = document.getElementById("campoDataFim");
-    this.$campoPrioridade = document.getElementById("campoPrioridade");
-    this.$campoObservacao = document.getElementById("campoObservacao");
-    this.$campoId = document.getElementById("campoId");
-
-    // Listas
-    this.$listaPendentes = document.getElementById("listaPendentes");
-    this.$listaConcluidas = document.getElementById("listaConcluidas");
-
-    // Contadores
-    this.$contadorPendentes = document.getElementById("contadorPendentes");
-    this.$contadorConcluidas = document.getElementById("contadorConcluidas");
-
-    // Botões
-    this.$botaoGravar = document.getElementById("botaoGravar");
-    this.$botaoRecuperar = document.getElementById("botaoRecuperar");
-    this.$botaoLimpar = document.getElementById("botaoLimpar");
-    this.$botaoLimparFormulario = document.getElementById("botaoLimparFormulario");
-  },
-
-  adicionarEventos() {
-    this.$formulario.addEventListener("submit", e => {
-      e.preventDefault();
-      this.salvarOuEditarTarefa();
-    });
-
-    this.$botaoLimparFormulario.addEventListener("click", () => this.limparFormulario());
-
-    this.$botaoGravar.addEventListener("click", () => this.salvarNoStorage());
-    this.$botaoRecuperar.addEventListener("click", () => this.carregarDoStorage(true));
-    this.$botaoLimpar.addEventListener("click", () => this.limparStorage());
-  },
-
-  salvarOuEditarTarefa() {
-    const id = this.$campoId.value || this.gerarId();
-
-    const tarefa = {
-      id,
-      titulo: this.$campoTitulo.value.trim(),
-      responsavel: this.$campoResponsavel.value,
-      dataInicio: this.$campoDataInicio.value,
-      dataFim: this.$campoDataFim.value,
-      prioridade: this.$campoPrioridade.value,
-      observacao: this.$campoObservacao.value,
-      concluida: false,
-      criadaEm: new Date().toISOString()
-    };
-
-    this.estado.tarefas[id] = tarefa;
-
-    if (!this.estado.ordem.includes(id)) {
-      this.estado.ordem.unshift(id);
-    }
-
-    this.atualizarListas();
-    this.limparFormulario();
-  },
-
-  gerarId() {
-    return "id_" + Math.random().toString(36).slice(2, 9);
-  },
-
-  limparFormulario() {
-    this.$formulario.reset();
-    this.$campoId.value = "";
-  },
-
-  atualizarListas() {
-    this.$listaPendentes.innerHTML = "";
-    this.$listaConcluidas.innerHTML = "";
-
-    const pendentes = [];
-    const concluidas = [];
-
-    this.estado.ordem.forEach(id => {
-      const t = this.estado.tarefas[id];
-      if (!t) return;
-
-      if (t.concluida) concluidas.push(t);
-      else pendentes.push(t);
-    });
-
-    this.$contadorPendentes.textContent = pendentes.length;
-    this.$contadorConcluidas.textContent = concluidas.length;
-
-    pendentes.forEach(t => this.$listaPendentes.appendChild(this.criarCard(t)));
-    concluidas.forEach(t => this.$listaConcluidas.appendChild(this.criarCard(t)));
-  },
-
-  criarCard(tarefa) {
-    const card = document.createElement("div");
-    card.className = "card mb-2 card-tarefa";
-
-    card.innerHTML = `
-      <div class="card-body">
-        <div class="d-flex justify-content-between">
-          <div>
-            <div class="titulo-tarefa">${tarefa.titulo}</div>
-            <small class="text-muted">${tarefa.responsavel} • ${tarefa.dataInicio} → ${tarefa.dataFim}</small>
-          </div>
-          <span class="badge bg-secondary">${tarefa.prioridade.toUpperCase()}</span>
-        </div>
-
-        <p class="small text-muted mt-2">${tarefa.observacao || "Sem observações"}</p>
-
-        <div class="d-flex gap-2 mt-2">
-          ${tarefa.concluida
-            ? `<button class="btn btn-danger btn-sm" data-id="${tarefa.id}" data-acao="excluir">Excluir</button>`
-            : `
-              <button class="btn btn-success btn-sm" data-id="${tarefa.id}" data-acao="concluir">Concluir</button>
-              <button class="btn btn-warning btn-sm" data-id="${tarefa.id}" data-acao="editar">Editar</button>
-            `}
-        </div>
-      </div>
-    `;
-
-    card.querySelectorAll("button").forEach(btn =>
-      btn.addEventListener("click", () => this.executarAcao(btn.dataset))
-    );
-
-    return card;
-  },
-
-  executarAcao({ id, acao }) {
-    if (acao === "concluir") {
-      this.estado.tarefas[id].concluida = true;
-    }
-
-    if (acao === "excluir") {
-      delete this.estado.tarefas[id];
-      this.estado.ordem = this.estado.ordem.filter(x => x !== id);
-    }
-
-    if (acao === "editar") {
-      const t = this.estado.tarefas[id];
-      this.$campoId.value = t.id;
-      this.$campoTitulo.value = t.titulo;
-      this.$campoResponsavel.value = t.responsavel;
-      this.$campoDataInicio.value = t.dataInicio;
-      this.$campoDataFim.value = t.dataFim;
-      this.$campoPrioridade.value = t.prioridade;
-      this.$campoObservacao.value = t.observacao;
-    }
-
-    this.atualizarListas();
-  },
-
-  salvarNoStorage() {
-    localStorage.setItem(CHAVE_ARMAZENAMENTO, JSON.stringify(this.estado));
-    alert("Tarefas salvas!");
-  },
-
-  carregarDoStorage(alertar = false) {
-    const dados = localStorage.getItem(CHAVE_ARMAZENAMENTO);
-
-    if (!dados) {
-      if (alertar) alert("Nenhum dado salvo!");
-      return;
-    }
-
-    this.estado = JSON.parse(dados);
-    this.atualizarListas();
-
-    if (alertar) alert("Tarefas recuperadas!");
-  },
-
-  limparStorage() {
-    if (!confirm("Deseja apagar TODOS os dados salvos?")) return;
-
-    localStorage.removeItem(CHAVE_ARMAZENAMENTO);
-    this.estado = { tarefas: {}, ordem: [] };
-    this.atualizarListas();
-
-    alert("Todos os dados foram apagados!");
-  }
+/*
+  Banco: objeto simples que guarda arrays de tarefas.
+  Cada tarefa é um objeto:
+  { titulo, responsavel, dataInicio, dataFim, prioridade, observacao }
+*/
+var Banco = {
+  pendentes: [],
+  feitas: []
 };
 
-App.init();
+/* ---------- Helpers para compatibilidade de ids ---------- */
+// tenta pegar pelo primeiro id; se não existe tenta o segundo (opcional)
+function pegarEl(id1, id2) {
+  return document.getElementById(id1) || (id2 ? document.getElementById(id2) : null);
+}
+
+/* ---------- Elementos (procura por variações de nomes) ---------- */
+var form = pegarEl("formTarefa", "formularioTarefa");
+var campoId = pegarEl("idTarefa", "campoId");
+var campoTitulo = pegarEl("campoTitulo", "titulo");
+var campoResponsavel = pegarEl("campoResponsavel", "responsavel");
+var campoDataInicio = pegarEl("campoDataInicio", "dataInicio");
+var campoDataFim = pegarEl("campoDataFim", "dataFim");
+var campoPrioridade = pegarEl("campoPrioridade", "priority");
+var campoObservacao = pegarEl("campoObservacao", "note");
+
+var listaPendentes = pegarEl("listaPendentes", "pendingList");
+var listaConcluidas = pegarEl("listaConcluidas", "doneList");
+
+var contadorPendentes = pegarEl("contadorPendentes", "pendingCount");
+var contadorConcluidas = pegarEl("contadorConcluidas", "doneCount");
+
+var botaoGravar = pegarEl("botaoGravar", "botaoGravar") || pegarEl("saveAllBtn", "btnSalvar");
+var botaoRecuperar = pegarEl("botaoRecuperar", "loadAllBtn") || pegarEl("btnRecuperar");
+var botaoLimpar = pegarEl("botaoLimpar", "botaoLimpar") || pegarEl("clearAllBtn", "btnLimpar");
+var botaoLimparForm = pegarEl("botaoLimparFormulario", "resetFormBtn");
+
+/* ---------- Mensagem de status (não usa alert/confirm) ---------- */
+function mostrarMensagem(texto, tempo = 2200) {
+  var barra = document.getElementById("barraMensagem");
+  if (!barra) {
+    barra = document.createElement("div");
+    barra.id = "barraMensagem";
+    barra.style.position = "fixed";
+    barra.style.top = "12px";
+    barra.style.right = "12px";
+    barra.style.padding = "8px 12px";
+    barra.style.background = "rgba(0,0,0,0.75)";
+    barra.style.color = "#fff";
+    barra.style.borderRadius = "6px";
+    barra.style.zIndex = 9999;
+    document.body.appendChild(barra);
+  }
+  barra.textContent = texto;
+  barra.style.opacity = "1";
+  clearTimeout(barra._t);
+  barra._t = setTimeout(() => { barra.style.opacity = "0"; }, tempo);
+}
+
+/* ---------- Renderiza as listas no DOM ---------- */
+function renderizarListas() {
+  if (!listaPendentes || !listaConcluidas) return;
+
+  listaPendentes.innerHTML = "";
+  listaConcluidas.innerHTML = "";
+
+  // Pendentes
+  for (var i = 0; i < Banco.pendentes.length; i++) {
+    var t = Banco.pendentes[i];
+    var item = document.createElement("div");
+    item.className = "card mb-2 card-tarefa";
+    item.innerHTML = "<div class='card-body p-2'>" +
+      "<div class='d-flex justify-content-between align-items-start'>" +
+        "<div><strong>" + escapeHtml(t.titulo) + "</strong><br><small class='text-muted'>" +
+        escapeHtml(t.responsavel) + " • " + escapeHtml(t.dataInicio) + " → " + escapeHtml(t.dataFim) +
+        "</small></div>" +
+        "<div class='text-end'><small class='badge bg-secondary'>" + escapeHtml(t.prioridade) + "</small></div>" +
+      "</div>" +
+      "<div class='mt-2 small text-truncate'>" + escapeHtml(t.observacao || "—") + "</div>" +
+      "<div class='mt-2 d-flex gap-2'>" +
+        "<button class='btn btn-success btn-sm btn-concluir' data-i='" + i + "'>Concluir</button>" +
+        "<button class='btn btn-warning btn-sm btn-editar' data-i='" + i + "'>Editar</button>" +
+      "</div></div>";
+    listaPendentes.appendChild(item);
+  }
+
+  // Concluídas
+  for (var j = 0; j < Banco.feitas.length; j++) {
+    var f = Banco.feitas[j];
+    var item2 = document.createElement("div");
+    item2.className = "card mb-2 card-tarefa";
+    item2.innerHTML = "<div class='card-body p-2'>" +
+      "<div class='d-flex justify-content-between align-items-start'>" +
+        "<div><strong>" + escapeHtml(f.titulo) + "</strong><br><small class='text-muted'>" +
+        escapeHtml(f.responsavel) + " • " + escapeHtml(f.dataInicio) + " → " + escapeHtml(f.dataFim) +
+        "</small></div>" +
+        "<div class='text-end'><small class='badge bg-secondary'>" + escapeHtml(f.prioridade) + "</small></div>" +
+      "</div>" +
+      "<div class='mt-2 small text-truncate'>" + escapeHtml(f.observacao || "—") + "</div>" +
+      "<div class='mt-2 d-flex gap-2'>" +
+        "<button class='btn btn-danger btn-sm btn-excluir' data-i='" + j + "'>Excluir</button>" +
+      "</div></div>";
+    listaConcluidas.appendChild(item2);
+  }
+
+  // atualiza contadores
+  if (contadorPendentes) contadorPendentes.textContent = Banco.pendentes.length;
+  if (contadorConcluidas) contadorConcluidas.textContent = Banco.feitas.length;
+
+  // adiciona handlers (simples)
+  var btnsConcluir = document.querySelectorAll(".btn-concluir");
+  btnsConcluir.forEach(function(b) {
+    b.onclick = function() {
+      var idx = parseInt(this.dataset.i, 10);
+      marcarConcluida(idx);
+    };
+  });
+
+  var btnsEditar = document.querySelectorAll(".btn-editar");
+  btnsEditar.forEach(function(b) {
+    b.onclick = function() {
+      var idx = parseInt(this.dataset.i, 10);
+      editarPendente(idx);
+    };
+  });
+
+  var btnsExcluir = document.querySelectorAll(".btn-excluir");
+  btnsExcluir.forEach(function(b) {
+    b.onclick = function() {
+      var idx = parseInt(this.dataset.i, 10);
+      excluirConcluida(idx);
+    };
+  });
+}
+
+/* ---------- Segurança: escapar html (evita injeção simples) ---------- */
+function escapeHtml(s) {
+  if (!s) return "";
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/* ---------- Operações principais ---------- */
+function adicionarTarefaDoFormulario() {
+  if (!campoTitulo || !campoDataInicio || !campoDataFim) {
+    mostrarMensagem("Campos do formulário não encontrados.");
+    return;
+  }
+  var titulo = campoTitulo.value.trim();
+  var responsavel = (campoResponsavel ? campoResponsavel.value.trim() : "");
+  var inicio = campoDataInicio.value;
+  var fim = campoDataFim.value;
+  var prioridade = (campoPrioridade ? campoPrioridade.value : "baixa");
+  var observacao = (campoObservacao ? campoObservacao.value.trim() : "");
+
+  // validação simples (sem alert)
+  if (!titulo || !inicio || !fim) {
+    mostrarMensagem("Preencha título, data início e data final.");
+    return;
+  }
+
+  var tarefa = {
+    titulo: titulo,
+    responsavel: responsavel,
+    dataInicio: inicio,
+    dataFim: fim,
+    prioridade: prioridade,
+    observacao: observacao
+  };
+
+  Banco.pendentes.unshift(tarefa);
+  renderizarListas();
+}
+
+function marcarConcluida(indice) {
+  var t = Banco.pendentes[indice];
+  if (!t) return;
+  Banco.pendentes.splice(indice, 1);
+  Banco.feitas.unshift(t); // guardar no topo
+  renderizarListas();
+}
+
+function editarPendente(indice) {
+  var t = Banco.pendentes[indice];
+  if (!t) return;
+  // preenche o formulário para editar (remover a antiga)
+  if (campoId) campoId.value = "editar"; // flag simples (não usamos id interno)
+  campoTitulo.value = t.titulo;
+  if (campoResponsavel) campoResponsavel.value = t.responsavel;
+  campoDataInicio.value = t.dataInicio;
+  campoDataFim.value = t.dataFim;
+  if (campoPrioridade) campoPrioridade.value = t.prioridade;
+  if (campoObservacao) campoObservacao.value = t.observacao;
+
+  // remove a original (ao salvar será um novo item)
+  Banco.pendentes.splice(indice, 1);
+  renderizarListas();
+}
+
+function excluirConcluida(indice) {
+  // exclusão permanente da tarefa concluída
+  Banco.feitas.splice(indice, 1);
+  renderizarListas();
+}
+
+/* ---------- LocalStorage: gravar/ler/limpar ---------- */
+function salvarNoLocal() {
+  // guardamos um objeto com dois arrays (pendentes e feitas)
+  var obj = {
+    pendentes: Banco.pendentes,
+    feitas: Banco.feitas
+  };
+  localStorage.setItem(CHAVE, JSON.stringify(obj));
+  mostrarMensagem("Dados gravados no localStorage.");
+}
+
+function carregarDoLocal() {
+  var raw = localStorage.getItem(CHAVE);
+  if (!raw) {
+    mostrarMensagem("Nenhum dado salvo no localStorage.");
+    return;
+  }
+  try {
+    var obj = JSON.parse(raw);
+    Banco.pendentes = obj.pendentes || [];
+    Banco.feitas = obj.feitas || [];
+    renderizarListas();
+    mostrarMensagem("Dados recuperados do localStorage.");
+  } catch (e) {
+    console.error("Erro ao ler localStorage:", e);
+    mostrarMensagem("Erro ao recuperar dados (ver console).");
+  }
+}
+
+function limparLocalStorage() {
+  localStorage.removeItem(CHAVE);
+  mostrarMensagem("LocalStorage limpo (dados removidos).");
+  // Nota: não limpamos a interface — isso segue a interpretação do requisito
+  // que pede para limpar "dados do App que esteja no localstorage"
+}
+
+/* ---------- Eventos dos botões e formulário ---------- */
+if (form) {
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+    adicionarTarefaDoFormulario();
+  });
+} else {
+  // se não houver formulário, ainda ligamos botões individuais
+}
+
+if (botaoGravar) botaoGravar.onclick = salvarNoLocal;
+if (botaoRecuperar) botaoRecuperar.onclick = carregarDoLocal;
+if (botaoLimpar) botaoLimpar.onclick = limparLocalStorage;
+if (botaoLimparForm) botaoLimparForm.onclick = function() {
+  if (form) form.reset();
+  if (campoId) campoId.value = "";
+  mostrarMensagem("Formulário limpo.");
+}
+
+/* ---------- Ao carregar a página: ler o storage automaticamente ---------- */
+window.addEventListener("load", function() {
+  carregarDoLocal();
+  renderizarListas();
+});
